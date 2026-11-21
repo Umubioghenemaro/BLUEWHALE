@@ -12,6 +12,11 @@ export const MAX_UINT64 = 18446744073709551615n;
 export const MAX_SAFE_INTEGER = BigInt(Number.MAX_SAFE_INTEGER);
 
 /**
+ * The maximum number of UTF-8 bytes allowed in a MEMO_TEXT entry.
+ */
+export const MAX_MEMO_TEXT_BYTES = 28;
+
+/**
  * Parses a memo ID payload into a BigInt, enforcing strict uint64 semantics.
  *
  * Accepts `bigint`, `string`, and `number` inputs. Raw `number` literals above
@@ -72,6 +77,26 @@ export function memoIdToXdr(id: bigint): UnsignedHyper {
   return UnsignedHyper.fromString(parseMemoId(id).toString());
 }
 
+/**
+ * Validates a MEMO_TEXT payload against the protocol's 28 UTF-8 byte limit.
+ *
+ * The limit is measured in UTF-8 bytes, not characters, so multi-byte
+ * characters (e.g. emoji) can exceed it even when the character count is
+ * within 28.
+ *
+ * @throws {RangeError} if the UTF-8 byte length exceeds 28.
+ */
+export function validateMemoText(text: string): string {
+  const byteLength = new TextEncoder().encode(text).length;
+  if (byteLength > MAX_MEMO_TEXT_BYTES) {
+    throw new RangeError(
+      `Memo text exceeds maximum of ${MAX_MEMO_TEXT_BYTES} UTF-8 bytes: ` +
+        `received ${byteLength} bytes (${text.length} characters)`,
+    );
+  }
+  return text;
+}
+
 export type MemoType = "none" | "id" | "text" | "hash" | "return";
 
 export type Memo = {
@@ -100,7 +125,7 @@ export class MemoText {
   value: string;
 
   constructor(text: string) {
-    this.value = text;
+    this.value = validateMemoText(text);
   }
 }
 
