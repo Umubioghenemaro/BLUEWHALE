@@ -58,6 +58,11 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+      # Guards against dual-package hazards: verifies the exports map resolves
+      # correctly for both `import` (ESM) and `require` (CJS) consumers and that
+      # the emitted .d.ts files resolve under node16/nodenext.
+      - name: Dual-package type resolution (are-the-types-wrong)
+        run: pnpm --filter @redishfish/bluewhale-core exec attw --pack . --profile node16
       - run: pnpm --filter @redishfish/bluewhale test
       - name: Upload TypeScript coverage to Codecov
         uses: codecov/codecov-action@v7
