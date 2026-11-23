@@ -3,8 +3,9 @@ import { Warning, WarningSeverity } from "../address/types";
 import { parse } from "../address/parse";
 import { detect } from "../address/detect";
 import { AddressParseError } from "../address/errors";
-import { normalizeMemoTextId } from "./memo";
+import { effectiveMemoType, normalizeMemoTextId } from "./memo";
 import { withRoutingResultJSON } from "./result";
+import { DIGITS_ONLY } from "../patterns";
 
 /**
  * Numeric weight of each warning severity. This ordering is normative and is
@@ -85,7 +86,14 @@ export function extractRouting(input: RoutingInput): RoutingResult {
   return withRoutingResultJSON(extractRoutingResult(input));
 }
 
-function extractRoutingResult(input: RoutingInput): RoutingResult {
+function extractRoutingResult(rawInput: RoutingInput): RoutingResult {
+  // A blank MEMO_TEXT ("", whitespace-only or null) is treated exactly like
+  // no memo in every SDK (spec/vectors/empty-memos.json).
+  const input: RoutingInput = {
+    ...rawInput,
+    memoType: effectiveMemoType(rawInput.memoType, rawInput.memoValue),
+  };
+
   // Only throw for a non-string destination — this is a programmer error, not
   // an address-domain error, and cannot be meaningfully expressed as a
   // RoutingResult.
@@ -175,7 +183,7 @@ function extractRoutingResult(input: RoutingInput): RoutingResult {
 
     if (
       input.memoType === "id" ||
-      (input.memoType === "text" && /^\d+$/.test(input.memoValue ?? ""))
+      (input.memoType === "text" && DIGITS_ONLY.test(input.memoValue ?? ""))
     ) {
       warnings.push({
         code: "MEMO_PRESENT_WITH_MUXED",
