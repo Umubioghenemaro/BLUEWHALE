@@ -26,11 +26,11 @@ class MuxedDecoder {
     final decoded = StrKeyUtil.decodeBase32(mAddress);
 
     if (decoded.length != 43) {
-      throw const StellarAddressException('Invalid muxed address length');
+      throw const StellarAddressException._('Invalid muxed address length');
     }
 
     if (decoded[0] != 0x60) {
-      throw const StellarAddressException('Invalid muxed address prefix');
+      throw const StellarAddressException._('Invalid muxed address prefix');
     }
 
     // Payload starts at index 1 (skip version byte 0x60)
