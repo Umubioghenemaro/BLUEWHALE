@@ -105,6 +105,40 @@ the same machine measured:
 | `BenchmarkExtractRouting_GAddr_MemoID` | 560 | 6 |
 | `BenchmarkExtractRouting_MAddr` | 2304 | 21 |
 
+### Sustained Routing Benchmark (100,000 iterations)
+
+`BenchmarkRoutingSustained` drives the routing hot path under continuous load
+to surface memory growth and leaks. It is compatible with Go's standard pprof
+flags for CPU and memory profile generation.
+
+Run the sustained benchmark:
+
+```bash
+go test ./routing -run '^$' -bench BenchmarkRoutingSustained -benchmem
+```
+
+Generate CPU and memory profiles:
+
+```bash
+go test ./routing -run '^$' -bench BenchmarkRoutingSustained -benchmem \
+	-cpuprofile cpu.out -memprofile mem.out
+```
+
+Inspect the profiles with the pprof tool:
+
+```bash
+go tool pprof -http=:8080 cpu.out
+go tool pprof -http=:8080 mem.out
+```
+
+For a deterministic fixed 100,000-iteration loop (useful for stable memory
+profiles), use `BenchmarkRoutingSustained100k`:
+
+```bash
+go test ./routing -run '^$' -bench BenchmarkRoutingSustained100k -benchmem \
+	-cpuprofile cpu.out -memprofile mem.out
+```
+
 ## Examples
 
 ### Complete Payment Listener

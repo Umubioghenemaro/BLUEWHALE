@@ -1,4 +1,5 @@
 import { Warning } from "../address/types";
+import { DIGITS_ONLY, LEADING_ZEROS } from "../patterns";
 
 export type NormalizeResult = {
   normalized: string | null;
@@ -20,11 +21,11 @@ const UINT64_MAX = BigInt("18446744073709551615");
 export function normalizeMemoTextId(s: string): NormalizeResult {
   const warnings: Warning[] = [];
 
-  if (s.length === 0 || !/^\d+$/.test(s)) {
+  if (s.length === 0 || !DIGITS_ONLY.test(s)) {
     return { normalized: null, warnings };
   }
 
-  let normalized = s.replace(/^0+/, "");
+  let normalized = s.replace(LEADING_ZEROS, "");
   if (normalized === "") {
     normalized = "0";
   }
@@ -43,7 +44,7 @@ export function normalizeMemoTextId(s: string): NormalizeResult {
   // Unreachable today (`s` was checked above and only zeros were stripped);
   // kept as a guard in case that check changes. Excluded from coverage.
   /* v8 ignore next 3 */
-  if (!/^\d+$/.test(normalized)) {
+  if (!DIGITS_ONLY.test(normalized)) {
     return { normalized: null, warnings };
   }
 
@@ -60,4 +61,34 @@ export function normalizeMemoTextId(s: string): NormalizeResult {
   /* v8 ignore stop */
 
   return { normalized, warnings };
+}
+
+/** ASCII whitespace per spec/README.md rule 5: space, tab, LF, CR. */
+const ASCII_WHITESPACE_ONLY = /^[ \t\n\r]*$/;
+
+/**
+ * Reports whether a MEMO_TEXT value carries no content: `null`, `undefined`,
+ * `""`, or only ASCII whitespace (space, tab, LF, CR).
+ *
+ * Non-ASCII whitespace such as U+00A0 is content, not blank, so it is still
+ * reported as an unroutable MEMO_TEXT. Shared with core-go
+ * (`routing.IsBlankMemoText`) and core-dart (`isBlankMemoText`).
+ */
+export function isBlankMemoText(value: string | null | undefined): boolean {
+  return value === null || value === undefined || ASCII_WHITESPACE_ONLY.test(value);
+}
+
+/**
+ * Resolves the memo type routing actually acts on. A blank MEMO_TEXT (see
+ * {@link isBlankMemoText}) is the same as no memo, so it resolves to
+ * `"none"`: no routing ID and no memo warnings, for G and M destinations
+ * alike. Every other memo type is returned unchanged.
+ *
+ * Normative cases live in spec/vectors/empty-memos.json.
+ */
+export function effectiveMemoType(
+  memoType: string,
+  memoValue: string | null | undefined
+): string {
+  return memoType === "text" && isBlankMemoText(memoValue) ? "none" : memoType;
 }

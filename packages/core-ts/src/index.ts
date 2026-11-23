@@ -7,6 +7,7 @@ export * from "./predicates";
 export * from "./muxed/encode";
 export * from "./muxed/decode";
 export * from "./strkey/crc16";
+export * from "./strkey/decode";
 export * from "./routing/extract";
 export * from "./routing/extractFromTx";
 export * from "./routing/extractFromURI";  // ← NEW
@@ -17,3 +18,4 @@ export * from "./routing/memo";
 export * from "./routing/memoRequirement";
 export * from "./routing";
 export * from "./domain";
+export * from "./sep0029/cache";

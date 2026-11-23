@@ -1,88 +1,53 @@
-/**
- * Routing helpers for resolving deposit destinations.
- */
+import { StrKey } from "./strkey";
 
-export type DepositDestinationKind = 'classic' | 'muxed' | 'contract';
-
-export interface ClassicDepositDestination {
-  kind: 'classic';
-  /** The classic account address (G...). */
+export interface DepositDestination {
   address: string;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  account: string;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  muxed: undefined;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  contract: undefined;
+  memo?: string;
+  memoType?: "text" | "id" | "hash" | "return";
+  route?: DepositRoute[];
 }
 
-export interface MuxedDepositDestination {
-  kind: 'muxed';
-  /** The muxed account address (M...). */
-  address: string;
-  /** The underlying classic account address (G...). */
-  account: string;
-  /** The muxed account id, if present. */
-  muxedId?: string;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  muxed: string;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  contract: undefined;
+export interface DepositRoute {
+  anchorId: string;
+  memo?: string;
+  memoType?: "text" | "id" | "hash" | "return";
+  route?: DepositRoute[];
 }
 
-export interface ContractDepositDestination {
-  kind: 'contract';
-  /** The contract address (C...). */
-  address: string;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  account: undefined;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  muxed: undefined;
-  /** @deprecated Use `kind` to discriminate. Retained for backward compatibility. */
-  contract: string;
+export interface ParseConfig {
+  /**
+   * When true, the parsed destination record (including deeply nested memo
+   * and route objects) is recursively frozen with `Object.freeze`.
+   */
+  immutable?: boolean;
 }
 
-export type DepositDestination =
-  | ClassicDepositDestination
-  | MuxedDepositDestination
-  | ContractDepositDestination;
+function deepFreeze<T>(value: T): T {
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+  if (Object.isFrozen(value)) {
+    return value;
+  }
+  Object.freeze(value);
+  for (const key of Object.keys(value as Record<string, unknown>)) {
+    deepFreeze((value as Record<string, unknown>)[key]);
+  }
+  return value;
+}
 
-/**
- * Parse a deposit destination string into a discriminated union.
- *
- * @deprecated The legacy nullable-property access pattern (`account`/`muxed`/`contract`)
- * is deprecated. Discriminate on `kind` instead.
- */
 export function parseDepositDestination(
-  destination: string,
+  input: string,
+  config: ParseConfig = {},
 ): DepositDestination {
-  const value = destination.trim();
+  const parsed = parseRaw(input);
+  return config.immutable ? deepFreeze(parsed) : parsed;
+}
 
-  if (value.startsWith('M')) {
-    return {
-      kind: 'muxed',
-      address: value,
-      account: value,
-      muxed: value,
-      contract: undefined,
-    };
+function parseRaw(input: string): DepositDestination {
+  const trimmed = input.trim();
+  if (!StrKey.isValidEd25519PublicKey(trimmed)) {
+    throw new Error(`Invalid deposit destination: ${input}`);
   }
-
-  if (value.startsWith('C')) {
-    return {
-      kind: 'contract',
-      address: value,
-      account: undefined,
-      muxed: undefined,
-      contract: value,
-    };
-  }
-
-  return {
-    kind: 'classic',
-    address: value,
-    account: value,
-    muxed: undefined,
-    contract: undefined,
-  };
+  return { address: trimmed };
 }
