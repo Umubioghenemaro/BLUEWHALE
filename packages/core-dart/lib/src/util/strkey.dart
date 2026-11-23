@@ -6,6 +6,18 @@ import 'dart:typed_data';
 class StrKeyUtil {
   static const String _alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
+  /// Maps each ASCII code unit to its 5-bit value, or -1 when it is not in
+  /// [_alphabet]. Replaces a `String.indexOf` scan per character on the hot path.
+  static final Int8List _decodeTable = _buildDecodeTable();
+
+  static Int8List _buildDecodeTable() {
+    final table = Int8List(128)..fillRange(0, 128, -1);
+    for (var i = 0; i < _alphabet.length; i++) {
+      table[_alphabet.codeUnitAt(i)] = i;
+    }
+    return table;
+  }
+
   /// Decodes an unpadded RFC 4648 Base32 string (case-insensitive).
   ///
   /// Throws [FormatException] when a character falls outside the Base32
@@ -47,7 +59,7 @@ class StrKeyUtil {
           final start = charIndex;
           final (rune, width) = _codePointAt(normalized, start);
           final char = String.fromCharCode(rune);
-          final value = _alphabet.indexOf(char);
+          final value = rune < 128 ? _decodeTable[rune] : -1;
           if (value == -1) {
             throw FormatException(
               _describeInvalidCharacter(char, rune, start),

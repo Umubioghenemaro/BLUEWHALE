@@ -284,6 +284,34 @@ final class RoutingResult {
     this.destinationError,
   }) : warnings = List.unmodifiable(warnings ?? const []);
 
+  /// Sentinel for [copyWith]: lets a nullable field be kept or cleared.
+  static const Object _unset = Object();
+
+  /// Returns a copy with the given fields replaced. Immutable: the receiver is
+  /// unchanged.
+  ///
+  /// Omit [id], [destinationBaseAccount] or [destinationError] to keep the
+  /// current value. Pass `null` to clear it, or a value to replace it.
+  RoutingResult copyWith({
+    RoutingSource? source,
+    Object? id = _unset,
+    List<RoutingWarning>? warnings,
+    Object? destinationBaseAccount = _unset,
+    Object? destinationError = _unset,
+  }) {
+    return RoutingResult(
+      source: source ?? this.source,
+      id: identical(id, _unset) ? this.id : id as BigInt?,
+      warnings: warnings ?? this.warnings,
+      destinationBaseAccount: identical(destinationBaseAccount, _unset)
+          ? this.destinationBaseAccount
+          : destinationBaseAccount as String?,
+      destinationError: identical(destinationError, _unset)
+          ? this.destinationError
+          : destinationError as DestinationError?,
+    );
+  }
+
   /// Serializes this result to a JSON-compatible map.
   ///
   /// JSON key names are harmonized with the Go and TypeScript implementations:
