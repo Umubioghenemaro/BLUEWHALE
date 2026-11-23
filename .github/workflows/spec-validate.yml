@@ -22,3 +22,4 @@ jobs:
           REGEX_SPEC_REQUIRE_PERL: "1"
       - run: node scripts/check-spec-version-bump.js
       - run: node scripts/check-vectors-sync.js
+      - run: node scripts/generate-parity-matrix.js --check

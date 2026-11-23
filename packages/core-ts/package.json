@@ -7,11 +7,16 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
       "bun": "./dist/index.mjs",
       "deno": "./dist/index.mjs",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
     "./package.json": "./package.json"
@@ -29,20 +34,22 @@
     "test:watch": "vitest",
     "test:bun": "bun test ./tests/runtime/bun.smoke.ts",
     "test:deno": "deno test --allow-read --allow-env tests/runtime/deno.smoke.ts",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "check:types": "attw --pack . --profile node16"
   },
   "peerDependencies": {
     "@stellar/stellar-sdk": ">=10.0.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
     "@redishfish/bluewhale-spec": "workspace:*",
-    "@stellar/stellar-sdk": "^17.2.1",
-    "eslint": "^10.13.0",
+    "@stellar/stellar-sdk": "^17.4.0",
+    "eslint": "^10.15.0",
     "tsup": "^9.0.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.1"
   },
   "dependencies": {
-    "commander": "^15.0.0"
+    "commander": "^15.1.0"
   }
 }

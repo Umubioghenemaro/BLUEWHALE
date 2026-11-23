@@ -25,10 +25,10 @@ jobs:
         target: [FuzzParse, FuzzDetect]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: packages/core-go/go.mod
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: Archive crashing seed inputs
         if: failure() && steps.fuzz.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: crashers-go-${{ matrix.target }}-${{ github.run_id }}
           path: packages/core-go/address/testdata/fuzz/
@@ -52,7 +52,7 @@ jobs:
 
       - name: File GitHub issue on crasher discovery
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const title = `🐛 Nightly fuzz crasher: Go \`${{ matrix.target }}\` (run #${{ github.run_id }})`;
@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -123,7 +123,7 @@ jobs:
 
       - name: Archive crashing seed inputs
         if: failure() && steps.fuzz.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: crashers-rust-${{ github.run_id }}
           path: examples/rust-address-fuzzer/findings/
@@ -132,7 +132,7 @@ jobs:
 
       - name: File GitHub issue on crasher discovery
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const title = `🐛 Nightly fuzz crasher: Rust address-fuzzer (run #${{ github.run_id }})`;
