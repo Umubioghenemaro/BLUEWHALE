@@ -11,6 +11,8 @@ Releases are coordinated with `spec/vectors.json` `spec_version`: see
 
 ### Added
 
+- `isBlankMemoText` and `effectiveMemoType`, the shared rule for empty memos.
+
 - `isPublicKeyAddress`, `isMuxedAddress` and `isContractAddress` predicates,
   narrowing to the branded `PublicKeyAddress`, `MuxedAddress` and
   `ContractAddress` types.
@@ -48,6 +50,11 @@ Releases are coordinated with `spec/vectors.json` `spec_version`: see
 
 ### Changed
 
+- A MEMO_TEXT that is null, `""` or only ASCII whitespace (space, tab, LF,
+  CR) is now treated as no memo by `extractRouting`, for G and M
+  destinations alike. It previously emitted
+  `MEMO_TEXT_UNROUTABLE` / `MEMO_IGNORED_FOR_MUXED`.
+  Normative cases: `spec/vectors/empty-memos.json`.
 - CRC16 moved to `src/strkey/crc16.ts` as a table-driven CRC16-XModem with a
   lazy runtime self-test (`crc16SelfTest`, check value `0x31C3`, little-endian
   checksum bytes) and new exports `crc16Xmodem`, `crc16ChecksumBytes`,
@@ -55,6 +62,18 @@ Releases are coordinated with `spec/vectors.json` `spec_version`: see
 - `package.json` now has an `exports` map with explicit `bun` and `deno`
   conditions (#200) and declares `"sideEffects": false`, with a test that
   importing only `extractRouting` stays under 5 KB gzipped (#194).
+
+## [1.3.0] - 2026-11-21
+
+### Added
+
+- SEP-0029 routing vectors (`extract_routing`) for a no-memo G-address, a C-address
+  rejected with a MEMO_ID, and a hash memo that emits `UNSUPPORTED_MEMO_TYPE`.
+- Negative `muxed_decode` vectors for non-canonical base32 padding.
+
+### Changed
+
+- `spec_version` is 1.3.0.
 
 ## [1.2.0] - 2026-09-24
 
