@@ -46,9 +46,9 @@ function buildTable(): Uint16Array {
   return table;
 }
 
-// Built and verified lazily, on first use, so importing this module has no
-// side effects and tree-shakes away when unused.
-let table: Uint16Array | null = null;
+// Static 256-entry lookup table, built once at module load. The self-test
+// below verifies it against the bitwise reference before first use.
+const table: Uint16Array = buildTable();
 
 function tableCrc(t: Uint16Array, bytes: Uint8Array): number {
   let crc = 0;
@@ -69,7 +69,7 @@ function tableCrc(t: Uint16Array, bytes: Uint8Array): number {
  * @throws {Crc16IntegrityError} if any invariant fails
  */
 export function crc16SelfTest(): void {
-  const t = table ?? buildTable();
+  const t = table;
 
   if (t[0] !== 0 || t[1] !== CRC16_XMODEM_POLYNOMIAL) {
     throw new Crc16IntegrityError("CRC16 table does not match polynomial 0x1021");
@@ -91,13 +91,13 @@ export function crc16SelfTest(): void {
   if (lo !== 0xc3 || hi !== 0x31) {
     throw new Crc16IntegrityError("CRC16 checksum bytes are not little-endian");
   }
-
-  table = t;
 }
 
 function toLittleEndian(crc: number): [number, number] {
   return [crc & 0xff, (crc >> 8) & 0xff];
 }
+
+let selfTested = false;
 
 /**
  * Computes the CRC16-XModem checksum of `bytes` as a number in 0..0xFFFF.
@@ -105,8 +105,11 @@ function toLittleEndian(crc: number): [number, number] {
  * @throws {Crc16IntegrityError} on the first call if the self-test fails
  */
 export function crc16Xmodem(bytes: Uint8Array): number {
-  if (table === null) crc16SelfTest();
-  return tableCrc(table as Uint16Array, bytes);
+  if (!selfTested) {
+    crc16SelfTest();
+    selfTested = true;
+  }
+  return tableCrc(table, bytes);
 }
 
 /** The two checksum bytes a strkey appends to `payload`, low byte first. */
