@@ -172,3 +172,28 @@ func TestSentinelCodes(t *testing.T) {
 		}
 	}
 }
+
+func TestErrorsIs_InvalidAddress(t *testing.T) {
+	_, err := address.Parse("not-a-valid-address")
+	if err == nil {
+		t.Fatal("expected an error for an invalid address")
+	}
+	if !errors.Is(err, corego.ErrInvalidAddress) {
+		t.Errorf("errors.Is(err, corego.ErrInvalidAddress) = false for %v", err)
+	}
+	if errors.Is(err, corego.ErrInvalidChecksum) {
+		t.Errorf("an address error must not match corego.ErrInvalidChecksum")
+	}
+}
+
+func TestErrorsIs_MuxedConflict(t *testing.T) {
+	// A muxed address whose underlying G address is invalid surfaces a
+	// conflict between the muxed and base account encodings.
+	_, _, err := muxed.DecodeMuxed(badChecksumG)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	if !errors.Is(err, corego.ErrMuxedConflict) {
+		t.Errorf("errors.Is(err, corego.ErrMuxedConflict) = false for %v", err)
+	}
+}

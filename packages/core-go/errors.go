@@ -1,49 +1,19 @@
-// Package corego holds sentinel errors shared by the core-go sub-packages.
-//
-// Each sentinel matches, under errors.Is, any error from address, muxed or
-// routing that carries the same code, however deeply it has been wrapped with
-// fmt.Errorf("%w", err):
-//
-//	_, err := address.Parse(input)
-//	if errors.Is(err, corego.ErrInvalidChecksum) {
-//		// ...
-//	}
-//
-// Matching is by code, so callers do not need to know which sub-package
-// produced the error. To read the details (input, message, cause), use
-// errors.As with the concrete type: address.RoutingError or
-// *muxed.AddressError.
-package corego
+package bluewhale
 
-// Error is a sentinel identified by a stable code.
-type Error struct {
-	code    string
-	message string
-}
+import "errors"
 
-func (e *Error) Error() string { return e.message }
-
-// ErrorCode returns the sentinel's code. Errors in the sub-packages expose the
-// same method, which is how they match each other under errors.Is.
-func (e *Error) ErrorCode() string { return e.code }
-
-// Is reports whether target carries the same code, which makes matching
-// symmetric: errors.Is(corego.ErrInvalidLength, err) works as well.
-func (e *Error) Is(target error) bool {
-	t, ok := target.(interface{ ErrorCode() string })
-	return ok && t.ErrorCode() == e.code
-}
-
+// Sentinel errors returned by the Bluewhale core package. They are wrapped
+// with %w by the decoding helpers so callers can match them using the
+// standard library's errors.Is and errors.As.
 var (
-	// ErrInvalidChecksum matches an address whose CRC16 checksum does not
-	// verify (address.ErrInvalidChecksum).
-	ErrInvalidChecksum = &Error{code: "INVALID_CHECKSUM", message: "invalid checksum"}
+	// ErrInvalidAddress indicates that an address could not be decoded or
+	// failed validation.
+	ErrInvalidAddress = errors.New("bluewhale: invalid address")
 
-	// ErrInvalidLength matches an address or muxed payload of the wrong length
-	// (address.ErrInvalidLength and muxed.ErrInvalidLength).
-	ErrInvalidLength = &Error{code: "INVALID_LENGTH", message: "invalid length"}
+	// ErrInvalidChecksum indicates that a checksum verification failed.
+	ErrInvalidChecksum = errors.New("bluewhale: invalid checksum")
 
-	// ErrUnsupportedScheme matches a payment URI that does not use the
-	// web+stellar: scheme (routing.ErrInvalidScheme).
-	ErrUnsupportedScheme = &Error{code: "UNSUPPORTED_SCHEME", message: "unsupported URI scheme"}
+	// ErrMuxedConflict indicates that a muxed account conflicts with the
+	// expected account.
+	ErrMuxedConflict = errors.New("bluewhale: muxed account conflict")
 )

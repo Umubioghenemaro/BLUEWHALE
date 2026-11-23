@@ -14,6 +14,9 @@ Go module versions are published as git tags of the form
 
 ### Added
 
+- `routing.IsBlankMemoText` and `routing.EffectiveMemoType` (returns
+  `MemoTypeNone` for a blank MEMO_TEXT), the shared rule for empty memos.
+
 - Sentinel errors in the root `corego` package (`errors.go`):
   `ErrInvalidChecksum`, `ErrInvalidLength` and `ErrUnsupportedScheme`. Each
   matches, under `errors.Is`, any error from `address`, `muxed` or `routing`
@@ -32,6 +35,11 @@ Go module versions are published as git tags of the form
 
 ### Changed
 
+- A MEMO_TEXT that is null, `""` or only ASCII whitespace (space, tab, LF,
+  CR) is now treated as no memo by `extractRouting`, for G and M
+  destinations alike. It previously emitted
+  `WarnMemoTextUnroutable` / `WarnMemoIgnoredForMuxed`.
+  Normative cases: `spec/vectors/empty-memos.json`.
 - `address.RoutingError.Is` also matches a `*RoutingError` target.
 - `*muxed.AddressError` now implements `Is` and matches by code. Previously
   `errors.Is(err, muxed.ErrInvalidLengthError)` was false for errors built by
@@ -73,6 +81,18 @@ Go module versions are published as git tags of the form
   allocation (#202).
 - `address.CalculateCRC16` processes eight bytes per loop iteration; results
   are unchanged (#207).
+
+## [1.3.0] - 2026-11-21
+
+### Added
+
+- SEP-0029 routing vectors (`extract_routing`) for a no-memo G-address, a C-address
+  rejected with a MEMO_ID, and a hash memo that emits `UNSUPPORTED_MEMO_TYPE`.
+- Negative `muxed_decode` vectors for non-canonical base32 padding.
+
+### Changed
+
+- `spec_version` is 1.3.0.
 
 ## [1.2.0] - 2026-09-24
 
